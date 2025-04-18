@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Crypto Market Monitor</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 20px;
+    }
+
+    input {
+      padding: 10px;
+      width: 100%;
+      max-width: 400px;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 12px;
+      border: 1px solid #ddd;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f8f8f8;
+    }
+
+    .positive {
+      color: green;
+    }
+
+    .negative {
+      color: red;
+    }
+
+    img {
+      width: 20px;
+      height: 20px;
+      vertical-align: middle;
+      margin-right: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Crypto Market Monitor</h1>
+  <input type="text" id="searchInput" placeholder="Search Cryptocurrency..." />
+
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Symbol</th>
+        <th>Price</th>
+        <th>Market Cap</th>
+        <th>24h Change</th>
+      </tr>
+    </thead>
+    <tbody id="cryptoTableBody">
+      <!-- Data will be inserted here -->
+    </tbody>
+  </table>
+
+  <script>
+    const API_URL = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=false";
+
+    async function fetchData() {
+      const res = await fetch(API_URL);
+      const data = await res.json();
+      return data;
+    }
+
+    function renderTable(data) {
+      const tbody = document.getElementById("cryptoTableBody");
+      const search = document.getElementById("searchInput").value.toLowerCase();
+      tbody.innerHTML = "";
+
+      data
+        .filter(coin => coin.name.toLowerCase().includes(search))
+        .forEach(coin => {
+          const row = document.createElement("tr");
+
+          row.innerHTML = `
+            <td><img src="${coin.image}" alt="${coin.name}"/> ${coin.name}</td>
+            <td>${coin.symbol.toUpperCase()}</td>
+            <td>$${coin.current_price.toLocaleString()}</td>
+            <td>$${coin.market_cap.toLocaleString()}</td>
+            <td class="${coin.price_change_percentage_24h >= 0 ? 'positive' : 'negative'}">
+              ${coin.price_change_percentage_24h.toFixed(2)}%
+            </td>
+          `;
+
+          tbody.appendChild(row);
+        });
+    }
+
+    async function updateTable() {
+      const data = await fetchData();
+      renderTable(data);
+    }
+
+    document.getElementById("searchInput").addEventListener("input", updateTable);
+
+    // Initial load
+    updateTable();
+    setInterval(updateTable, 60000); // Refresh every 60s
+  </script>
+</body>
+</html>
